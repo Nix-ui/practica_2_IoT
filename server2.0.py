@@ -1,182 +1,120 @@
 import socket
 import threading
-import time
+import struct
 
-class EnhancedESP32Server:
+class ESPCRUDProtocol:
+    # Códigos de operación (1 byte)
+    CMD_POST = 0x01
+    CMD_GET = 0x02
+    CMD_UPDATE = 0x03
+    CMD_DELETE = 0x04
+    
+    # Tipos de recurso (1 byte)
+    RES_SENSOR = 0x10
+    RES_LED = 0x11
+    
+    # Estados de respuesta (1 byte)
+    STATUS_OK = 0x20
+    STATUS_ERROR = 0x21
+    STATUS_NOT_FOUND = 0x22
+
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.clients = {'sensor': None, 'led': None}
+        self.data_store = {
+            'sensors': {},
+            'leds': {}
+        }
         self.lock = threading.Lock()
         self.running = False
-        self.connection_timeout = 15  # segundos
-        self.heartbeat_interval = 10  # segundos
 
-    def _set_socket_timeout(self, conn):
-        """Configura timeout para operaciones de socket"""
-        conn.settimeout(self.connection_timeout)
-
-    def _safe_send(self, conn, data):
-        """Envía datos con manejo de errores"""
+    def _handle_packet(self, conn):
+        """Procesa paquetes binarios con estructura:
+        [1:CMD][1:RES][2:id][4:data_len][data]"""
         try:
-            conn.sendall(data)
-            return True
-        except (ConnectionResetError, BrokenPipeError, socket.timeout) as e:
-            print(f"Error enviando datos: {type(e).__name__}")
-            return False
+            header = conn.recv(8)
+            if len(header) != 8:
+                return None
+            
+            cmd, res, dev_id, data_len = struct.unpack('!BBHL', header)
+            data = conn.recv(data_len) if data_len > 0 else b''
+            
+            return self._process_command(cmd, res, dev_id, data)
+            
         except Exception as e:
-            print(f"Error inesperado al enviar: {type(e).__name__}")
-            return False
+            print(f"Error procesando paquete: {e}")
+            return struct.pack('!B', self.STATUS_ERROR)
 
-    def _safe_recv(self, conn, buffer_size):
-        """Recibe datos con manejo de errores"""
-        try:
-            data = conn.recv(buffer_size)
-            return data if data else None
-        except socket.timeout:
-            #print("Timeout de recepción, verificando conexión...")
-            return None
-        except (ConnectionResetError, BrokenPipeError) as e:
-            print(f"Error en recepción: {type(e).__name__}")
-            return None
-        except Exception as e:
-            print(f"Error inesperado al recibir: {type(e).__name__}")
-            return None
-
-    def _client_identification(self, conn):
-        """Identificación con timeout y reintentos"""
-        try:
-            conn.settimeout(5)  # Timeout para identificación
-            data = self._safe_recv(conn, 16)
-            if data:
-                return data.decode('utf-8').strip().lower()
-            return None
-        except socket.timeout:
-            print("Timeout en identificación de cliente")
-            return None
-        finally:
-            self._set_socket_timeout(conn)
-
-    def _connection_heartbeat(self, conn):
-        """Verifica conexión con heartbeat"""
-        try:
-            # Envía ping de verificación
-            return self._safe_send(conn, b'PING')
-        except:
-            return False
-
-    def _handle_sensor(self, conn, addr):
-        """Manejo mejorado para sensores"""
-        last_activity = time.time()
+    def _process_command(self, cmd, res, dev_id, data):
+        """Ejecuta la operación CRUD correspondiente"""
+        resource = 'sensors' if res == self.RES_SENSOR else 'leds'
         
-        while self.running:
-            data = self._safe_recv(conn, 64)
-            
-            if data is None:
-                print(f"[SENSOR] {addr} - Conexión perdida")
-                break
-                
-            if data == b'':
-                print(f"[SENSOR] {addr} - Desconexión limpia")
-                break
-                
-            if time.time() - last_activity > self.heartbeat_interval:
-                if not self._connection_heartbeat(conn):
-                    print(f"[SENSOR] {addr} - Heartbeat fallido")
-                    break
-            
-            print(f"[Datos sensor] {data.decode('utf-8')}")
-            self._relay_to_led(data)
-            last_activity = time.time()
-
-    def _handle_led(self, conn, addr):
-        """Manejo mejorado para LEDs"""
-        last_activity = time.time()
-        
-        while self.running:
-            # Verificar conexión periódicamente
-            if time.time() - last_activity > self.heartbeat_interval:
-                if not self._connection_heartbeat(conn):
-                    print(f"[LED] {addr} - Heartbeat fallido")
-                    break
-                last_activity = time.time()
-            
-            # Limpiar buffer de recepción
-            data = self._safe_recv(conn, 1)
-            if data is None:
-                break
-
-    def _cleanup_connection(self, client_type, conn):
-        """Limpieza segura de conexión"""
         with self.lock:
-            if self.clients[client_type] == conn:
-                self.clients[client_type] = None
-        try:
-            if conn:
-                conn.shutdown(socket.SHUT_RDWR)
-                conn.close()
-        except:
-            pass
-        print(f"[{client_type.upper()}] Conexión limpiada")
+            try:
+                if cmd == self.CMD_POST:
+                    self.data_store[resource][dev_id] = data
+                    return struct.pack('!B', self.STATUS_OK)
+                    
+                elif cmd == self.CMD_GET:
+                    value = self.data_store[resource].get(dev_id, b'')
+                    return struct.pack(f'!BB{len(value)}s', 
+                                     self.STATUS_OK, len(value), value)
+                    
+                elif cmd == self.CMD_UPDATE:
+                    if dev_id in self.data_store[resource]:
+                        self.data_store[resource][dev_id] = data
+                        return struct.pack('!B', self.STATUS_OK)
+                    return struct.pack('!B', self.STATUS_NOT_FOUND)
+                    
+                elif cmd == self.CMD_DELETE:
+                    if dev_id in self.data_store[resource]:
+                        del self.data_store[resource][dev_id]
+                        return struct.pack('!B', self.STATUS_OK)
+                    return struct.pack('!B', self.STATUS_NOT_FOUND)
+                    
+                else:
+                    return struct.pack('!B', self.STATUS_ERROR)
+                    
+            except Exception as e:
+                print(f"Error en operación: {e}")
+                return struct.pack('!B', self.STATUS_ERROR)
 
     def _client_handler(self, conn, addr):
-        """Manejador principal mejorado"""
-        client_type = self._client_identification(conn)
-        
-        if not client_type or client_type not in ['sensor', 'led']:
-            self._cleanup_connection('unknown', conn)
-            return
-
-        # Registro seguro
-        with self.lock:
-            if self.clients[client_type]:
-                self._safe_send(conn, b'ERROR:DUPLICATE')
-                self._cleanup_connection(client_type, conn)
-                return
-            self.clients[client_type] = conn
-
-        self._set_socket_timeout(conn)
-        print(f"[{client_type.upper()}] {addr} conectado")
-
+        """Maneja la conexión con un ESP32"""
+        print(f"[+] Conexión desde {addr}")
         try:
-            if client_type == 'sensor':
-                self._handle_sensor(conn, addr)
-            else:
-                self._handle_led(conn, addr)
-        except Exception as e:
-            print(f"[{client_type.upper()}] Error: {type(e).__name__}")
+            while self.running:
+                response = self._handle_packet(conn)
+                if not response:
+                    break
+                conn.sendall(response)
         finally:
-            self._cleanup_connection(client_type, conn)
+            conn.close()
+            print(f"[-] {addr} desconectado")
 
     def start(self):
-        """Inicio seguro del servidor"""
+        """Inicia el servidor"""
         self.running = True
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((self.host, self.port))
-            s.listen(5)
-            print(f"Servidor mejorado iniciado en {self.host}:{self.port}")
-
+            s.listen()
+            print(f"Servidor CRUD para ESP32 en {self.host}:{self.port}")
+            
             try:
                 while self.running:
-                    try:
-                        conn, addr = s.accept()
-                        print(f"Conexión entrante de {addr}")
-                        thread = threading.Thread(
-                            target=self._client_handler,
-                            args=(conn, addr),
-                            daemon=True
-                        )
-                        thread.start()
-                    except socket.timeout:
-                        continue
+                    conn, addr = s.accept()
+                    thread = threading.Thread(
+                        target=self._client_handler,
+                        args=(conn, addr),
+                        daemon=True
+                    )
+                    thread.start()
             except KeyboardInterrupt:
                 print("\nDeteniendo servidor...")
             finally:
                 self.running = False
                 s.close()
-                print("Socket principal cerrado")
 
 if __name__ == "__main__":
-    server = EnhancedESP32Server(HOST='0.0.0.0', PORT=12345)
+    server = ESPCRUDProtocol('0.0.0.0', 12345)
     server.start()
