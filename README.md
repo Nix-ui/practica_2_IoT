@@ -3,6 +3,7 @@
 ## Integrantes
 - Rocha
 - Quiroga
+- La Torre
   
   ## Indice
   - [Practica 2 IoT](#practica-2-iot)
