@@ -4,6 +4,16 @@
 - Rocha
 - Quiroga
   
+  ## Indice
+  - [Practica 2 IoT](#practica-2-iot)
+  - [Integrantes](#integrantes)
+  - [Indice](#indice)
+    - [Descripción](#descripción)
+    - [Objetivos](#objetivos)
+    - [Protocolo de Aplicacion](#protocolo-de-aplicacion)
+    - [Diagramas](#diagramas)
+
+
   ### Descripción
 
 ### Objetivos
@@ -19,10 +29,57 @@
       - -1
 
   ### Diagramas
-  - Diagrama del prototipo
-  - ![Diagramado del prototipo](img/prototype.svg)
+- Diagrama del prototipo
+    - ![Diagramado del prototipo](img/prototype.svg)
 - Diagrama de arquitectura
   - ![Diagrama de arquitectura](img/archectitureDiagram.svg)
+- Diagrama de Clases
+  - ESP30 Pins (Led Controller)
+    - ```mermaid
+          classDiagram
+            direction RL
+            class Led{
+              -ledPin : byte
+              -actualState : bool 
+              -finalState : byte
+              -previousMillis : unsigned long 
+              -interval : unsigned long
+              +STATE_ON : byte$
+              +STATE_OFF : byte$
+              +STATE_BLINK : byte$
+              -turnOn() void
+              -turnOff() void
+              -blink() void
+              +setBlinksPerSecond(byte bps) void
+              +setState(byte state) void
+              }
+            Controller <-- LedController
+            LedController --> Led
+            Controller : +setState() virtual void
+            Controller: + setAllStates() virtual void
+            class LedController{
+              -leds : Led[]
+              +setAllStates(byte state) void
+              +setState(byte ledIndex, byte state) void
+            }      
+      ``` 
+  - ESP38 Pins (UltraSonicSensor)
+    - ```mermaid
+                classDiagram
+                    direction RL
+                    class UltraSonicSensor{
+                      -trigerPin : byte
+                      -echoPin : byte
+                      -getDistance() long
+                      +getDistanceCm() int
+                    }
+      ```
+  - Server(Python)
+    - ```mermaid
+              classDiagram
+              direction RL
+
+      ```
 - Diagrama de comportamiento
   - ```mermaid
           %%{init: {'theme':'neutral'}}%%
