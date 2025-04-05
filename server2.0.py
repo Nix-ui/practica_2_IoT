@@ -53,13 +53,12 @@ class ESPCRUDProtocol:
             try:
                 if cmd == self.CMD_POST:
                     self.data_store[resource][dev_id] = data
+                    print(f"[+] Recibido POST para {resource} con ID {dev_id}: {data}") # <--- Línea añadida
                     return struct.pack('!B', self.STATUS_OK)
-                    
                 elif cmd == self.CMD_GET:
                     value = self.data_store[resource].get(dev_id, b'')
                     return struct.pack(f'!BB{len(value)}s', 
-                                     self.STATUS_OK, len(value), value)
-                    
+                                    self.STATUS_OK, len(value), value)
                 elif cmd == self.CMD_UPDATE:
                     if dev_id in self.data_store[resource]:
                         self.data_store[resource][dev_id] = data
