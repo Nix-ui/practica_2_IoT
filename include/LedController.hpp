@@ -1,7 +1,7 @@
 #pragma once
 #include "Controller.hpp"
 #include "Led.hpp"
-class LedController : public Controller {
+class LedController : public Controller<Led::State, byte>{
     public:
         LedController(Led* leds, byte numLeds,byte firstPin) 
             : m_leds(leds), 

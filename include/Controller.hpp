@@ -1,8 +1,9 @@
 #pragma once
 #include "Led.hpp"
+template <typename T,typename U>
 class Controller{
     public:
   		Controller(){};
-        virtual void setAllState(Led::State)=0;
-        virtual void setState(byte,Led::State)=0;
+        virtual void setAllState(T state)=0;
+        virtual void setState(U pin,T tate)=0;
 };
