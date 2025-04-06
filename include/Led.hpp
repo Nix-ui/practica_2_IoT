@@ -36,6 +36,9 @@ public:
         pinMode(pin, OUTPUT);
         digitalWrite(pin, LOW); // Asegura que el LED comienza apagado
     }
+    byte getPin(){
+      return pin;
+    }
 
     // Establece la velocidad de parpadeo en parpadeos por segundo
     void setBlinksPerSecond(unsigned long blinksPerSecond) {

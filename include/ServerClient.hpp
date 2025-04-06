@@ -150,12 +150,13 @@ public:
             int statusByte = receiveByte();
             if (statusByte == Status::STATUS_OK) {
                 int resByte = receiveByte();
+                uint16_t receivedDevId = (static_cast<uint16_t>(receiveByte()) << 8) | receiveByte(); // Leer dev_id de 2 bytes
                 uint32_t dataLen = 0;
                 dataLen |= (static_cast<uint32_t>(receiveByte()) << 24);
                 dataLen |= (static_cast<uint32_t>(receiveByte()) << 16);
                 dataLen |= (static_cast<uint32_t>(receiveByte()) << 8);
                 dataLen |= receiveByte();
-                if (resByte == expectedRes) {
+                if (resByte == expectedRes && receivedDevId == expectedDevId) { // Verificar también el ID
                     if (dataLen > 0) {
                         for (int i = 0; i < dataLen; i++) {
                             int byte = receiveByte();
@@ -167,7 +168,7 @@ public:
                         }
                     }
                 } else {
-                    Serial.println("Error: Received data for unexpected resource.");
+                    Serial.println("Error: Received data for unexpected resource or device ID.");
                 }
             } else if (statusByte == Status::STATUS_NOT_FOUND) {
                 Serial.println("Resource not found on server.");
@@ -176,6 +177,8 @@ public:
             } else if (statusByte != -1) {
                 Serial.print("Received unexpected status: 0x");
                 Serial.println(statusByte, HEX);
+            } else {
+                Serial.println("Error: No status byte received.");
             }
         }
         return response;

@@ -17,7 +17,7 @@ void intervalChanged(){
     intervalToSend[0] = interval;
     intervalToSend[1] = 0;
     if(server.connectToServer()){
-      if (server.post(ServerClient::Resource::RES_SENSOR, SENSOR_ID, intervalToSend, 1)) {
+      if (server.update(ServerClient::Resource::RES_SENSOR, SENSOR_ID, intervalToSend, 1)) {
         int status = server.receiveStatus();
         Serial.print("POST Sensor Status: 0x");
         Serial.println(status, HEX);
@@ -30,6 +30,10 @@ void intervalChanged(){
 void setup() {
   Serial.begin(115200);
   server.wifiConnect("WIFI_NAME","PASSWORD");
+  uint8_t intervalToSend[2]; // Array de 2 bytes
+  intervalToSend[0] = actualInterval;
+  intervalToSend[1] = 0;
+  server.post(ServerClient::Resource::RES_SENSOR, SENSOR_ID, intervalToSend, 1);
 } 
 
 void loop() {
