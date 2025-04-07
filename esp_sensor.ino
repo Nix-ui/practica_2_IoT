@@ -6,21 +6,36 @@ const uint16_t SENSOR_ID=1;
 UltraSonicSensor mySensor(2,4);
 ServerClient server("192.168.50.62", 12345);
 byte actualInterval = 0;
-void intervalChanged(){
+void intervalChanged() {
   byte cm = mySensor.getDistanceCm();
-  byte interval= (cm/30)+1;
-  Serial.print("Raw Distance (cm): ");
-  Serial.println(cm);
-  if(actualInterval != interval && interval<4){
+  byte interval = (cm / 30) + 1;
+
+  // Debug: Mostrar valores calculados
+  Serial.print("Distancia (cm): ");
+  Serial.print(cm);
+  Serial.print(" -> Intervalo calculado: ");
+  Serial.println(interval);
+
+  if (actualInterval != interval && interval < 4) {
     actualInterval = interval;
-    uint8_t intervalToSend[2]; // Array de 2 bytes
+    uint8_t intervalToSend[4]; // Usar 4 bytes para compatibilidad con servidor
+    memset(intervalToSend, 0, sizeof(intervalToSend));
     intervalToSend[0] = interval;
-    intervalToSend[1] = 0;
-    if(server.connectToServer()){
-      if (server.update(ServerClient::Resource::RES_SENSOR, SENSOR_ID, intervalToSend, 1)) {
-        int status = server.receiveStatus();
-        Serial.print("POST Sensor Status: 0x");
+
+    if (server.connectToServer()) {
+      bool success = server.update( // Usar UPDATE en lugar de POST
+        ServerClient::Resource::RES_SENSOR, 
+        SENSOR_ID, 
+        intervalToSend, 
+        sizeof(intervalToSend)
+      );
+      
+      if (success) {
+        byte status = server.receiveStatus();
+        Serial.print("UPDATE Sensor Status: 0x");
         Serial.println(status, HEX);
+      } else {
+        Serial.println("Fallo al enviar UPDATE");
       }
       server.disconnectFromServer();
     }
