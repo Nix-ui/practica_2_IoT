@@ -1,15 +1,19 @@
 #include "UltraSonicSensor.hpp"
 #include "ServerClient.hpp"
 
-class SensorController{
+class SensorExecute{
   private:
     UltraSonicSensor mySensor;
     ServerClient server;
+    const char* ssid;
+    const char* password;
     byte actualInterval;
   public:
-    SensorController(uint16_t SENSOR_ID,uint8_t triggerPin, uint8_t echoPin, const char* serverIP, uint16_t serverPort, const char* ssid, const char* password):
+    SensorExecute(uint16_t SENSOR_ID,uint8_t triggerPin, uint8_t echoPin, const char* serverIP, uint16_t serverPort, const char* ssid, const char* password):
     mySensor(triggerPin, echoPin),
     server(serverIP, serverPort),
+    ssid(ssid),
+    password(password),
     actualInterval(0){
     mySensor.setSensorId(SENSOR_ID);
     }

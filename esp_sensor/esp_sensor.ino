@@ -1,11 +1,11 @@
-#include "SensorController.hpp"
+#include "SensorExecute.hpp"
 const uint16_t SENSOR_ID = 1;
 
-SensorController program(SENSOR_ID, 2, 4, "192.168.129.175", 12345, "Walter", "Saxomofon1");
+SensorExecute aplication(SENSOR_ID, 2, 4, "192.168.129.175", 12345, "Walter", "Saxomofon1");
 void setup() {
-  program.setup();
+  aplication.setup();
 } 
 
 void loop() {
-  program.loop();
+  aplication.loop();
 }
