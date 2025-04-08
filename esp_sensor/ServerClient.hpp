@@ -106,7 +106,7 @@ public:
         Serial.println("Desconectado del servidor");
     }
 
-    bool isConnected() { 
+    bool isConnected(){ 
         return m_isConnected && m_client.connected(); 
     }
 
