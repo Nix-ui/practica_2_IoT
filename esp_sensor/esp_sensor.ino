@@ -4,7 +4,7 @@ const uint16_t SENSOR_ID=1;
 
 
 UltraSonicSensor mySensor(2,4);
-ServerClient server("192.168.50.62", 12345);
+ServerClient server("192.168.129.175", 12345);
 byte actualInterval = 0;
 void intervalChanged() {
   byte cm = mySensor.getDistanceCm();
@@ -44,7 +44,7 @@ void intervalChanged() {
 
 void setup() {
   Serial.begin(115200);
-  server.wifiConnect("WIFI_NAME","PASSWORD");
+  server.wifiConnect("Walter","Saxomofon1");
   uint8_t intervalToSend[2]; // Array de 2 bytes
   intervalToSend[0] = actualInterval;
   intervalToSend[1] = 0;
