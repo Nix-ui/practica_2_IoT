@@ -683,7 +683,7 @@
  </g>
  <circle cx="324.327" cy="70.6131" fill="black" r="0.72" stroke="none" stroke-width="0"/>
  <g partID="855147030">
-  <line stroke="#25cc35" stroke-linecap="round" stroke-width="0.699998" x1="338.795" x2="295.596" y1="77.96" y2="77.96"/>
+  <line stroke="#ff7300" stroke-linecap="round" stroke-width="0.699998" x1="338.795" x2="295.596" y1="77.96" y2="77.96"/>
  </g>
  <g partID="855147310">
   <line stroke="#418dd9" stroke-linecap="round" stroke-width="0.699998" x1="324.327" x2="295.596" y1="113.96" y2="113.96"/>
@@ -808,8 +808,8 @@
  <g id="partLabel" partID="855125000">
   <g transform="translate(291.636,52.684)">
    <g fill="#000000" fill-opacity="1" font-family="'DroidSans'" font-size="5.000" font-style="normal" font-weight="normal" id="schematicLabel" stroke="none">
-    <text x="0" y="5.000">greenLed</text>
-    <text x="0" y="10.000">Green (555nm)</text>
+    <text x="0" y="5.000">orangeLed</text>
+    <text x="0" y="10.000">Orange (620nm)</text>
    </g>
   </g>
  </g>
