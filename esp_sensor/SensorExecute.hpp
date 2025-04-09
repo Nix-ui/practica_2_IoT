@@ -34,12 +34,17 @@ class SensorExecute{
         Serial.print("Raw Distance (cm): ");
         Serial.println(cm);
         Serial.println(interval);
-        if(cm !=0){
-            if(actualInterval != interval && interval<4){
-                actualInterval = interval;
-                uint8_t intervalToSend[2]; // Array de 2 bytes
+        if(cm !=0 ){
+            if(actualInterval != interval){
+                uint8_t intervalToSend[2]; 
                 intervalToSend[0] = interval;
                 intervalToSend[1] = 0;
+                if(interval > 3 && actualInterval!=3){
+                    intervalToSend[0] = 3;
+                    actualInterval =3;
+                }else{
+                    actualInterval = interval;
+                }
                 if(server.connectToServer()){
                     if (server.update(ServerClient::Resource::RES_SENSOR, mySensor.getSensorId(), intervalToSend, 1)) {
                         int status = server.receiveStatus();
