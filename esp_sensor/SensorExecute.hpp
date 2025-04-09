@@ -26,27 +26,39 @@ class SensorExecute{
         intervalToSend[0] = actualInterval;
         intervalToSend[1] = 0;
         server.post(ServerClient::Resource::RES_SENSOR, mySensor.getSensorId(), intervalToSend, 1);
-        server,disconnectFromServer();
+        server.disconnectFromServer();
     }
     void loop(){
         byte cm = mySensor.getDistanceCm();
         byte interval= (cm/30)+1;
         Serial.print("Raw Distance (cm): ");
         Serial.println(cm);
-        if(actualInterval != interval && interval<4){
-            actualInterval = interval;
-            uint8_t intervalToSend[2]; // Array de 2 bytes
-            intervalToSend[0] = interval;
-            intervalToSend[1] = 0;
-            if(server.connectToServer()){
-            if (server.update(ServerClient::Resource::RES_SENSOR, mySensor.getSensorId(), intervalToSend, 1)) {
-                int status = server.receiveStatus();
-                Serial.print("Update Sensor Status: 0x");
-                Serial.println(status, HEX);
+        Serial.println(interval);
+        if(cm !=0){
+            if(actualInterval != interval && interval<4){
+                actualInterval = interval;
+                uint8_t intervalToSend[2]; // Array de 2 bytes
+                intervalToSend[0] = interval;
+                intervalToSend[1] = 0;
+                if(server.connectToServer()){
+                    if (server.update(ServerClient::Resource::RES_SENSOR, mySensor.getSensorId(), intervalToSend, 1)) {
+                        int status = server.receiveStatus();
+                        Serial.print("Update Sensor Status: 0x");
+                        Serial.println(status, HEX);
+                    }
+                server.disconnectFromServer();
+                }
             }
+        } else{
+            if(server.connectToServer()){
+                if (server.update(ServerClient::Resource::RES_SENSOR, mySensor.getSensorId(), intervalToSend, 1)) {
+                    int status = server.receiveStatus();
+                    Serial.print("Update Sensor Status: 0x");
+                    Serial.println(status, HEX);
+                }
             server.disconnectFromServer();
             }
         }
+        delay(100);
     }
-    delay(100);
 };
