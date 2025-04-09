@@ -151,7 +151,7 @@
 - Diagrama de comportamiento
   - ```mermaid
     %%{init: {'theme':'dark'}}%%
-             sequenceDiagram
+              sequenceDiagram
                 Participant A as SERVER
                 Note left of A: Conect to wifi
                 Note left of A: Server start
@@ -161,10 +161,10 @@
                 Participant D as ESP-32(LedExecute)
                 Note left of D: Conect to wifi
                 Participant E as LedController
-                Note over  E: if(interval == 0) setAllLeds(STATE_ON);
-                Note over  E: if(interval == 1) setAllLeds(STATE_OFF) <br> setLed(redLedPin,STATE_ON)
-                Note over  E: if(interval == 2) setAllLeds(STATE_OFF) <br>setLed(redLedPin,STATE_ON)
-                Note over  E: if(interval == -1) setAllLeds(STATE_OFF); 
+                Note over  E: if(interval == 0) setAllLeds(STATE_OFF)
+                Note over  E: if(interval == 1) setAllLeds(STATE_OFF) <br> setState(blueLedPin,STATE_ON)
+                Note over  E: if(interval == 2) setAllLeds(STATE_OFF) <br>setState(orangeLedPin,STATE_ON)
+                Note over  E: if(interval == 3) setAllLeds(STATE_OFF) <br>setState(redLedPin,STATE_ON)
                 Participant F as blueLed
                 Participant G as orangeLed
                 Participant H as redLed
