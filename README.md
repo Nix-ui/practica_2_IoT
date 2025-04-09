@@ -37,15 +37,15 @@
 
 ### Materiales
 - ESP32(30pins)
-  - ![ESP32(30pins)](img/esp32_30pins.svg)
+  - ![ESP32(30pins)](img/ESP32_30pins.svg)
 - ESP32(38pins)
-  - ![ESP32(38pins)](img/esp32_38pins.svg)
+  - ![ESP32(38pins)](img/ESP32_38pins.svg)
 - LED
   - ![RED LED](img/redLed.svg) ![GREEN LED](img/greenLed.svg) ![BLUE LED](img/blueLed.svg)
 - Resistor 220$\Omega$
   - ![Resistor](img/resistor_220_omn.svg)
 - UltraSonicSensor
-  - ![UltraSonicSensor](img/ultrasonicSensor.svg)
+  - ![UltraSonicSensor](img/UltraSonicSensor.svg)
 
 
   ### Diagramas
