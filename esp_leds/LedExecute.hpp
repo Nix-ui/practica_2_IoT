@@ -39,7 +39,7 @@ class LedExecute{
             }
         }        
     public:
-        LedExecute(uint16_t SENSOR_ID,Led* leds,uint8_t firstPin,uint8_t numLeds, const char* serverIP, uint16_t serverPort, const char* ssid, const char* password):
+        LedExecute(uint16_t SENSOR_ID,Led leds[],uint8_t firstPin,uint8_t numLeds, const char* serverIP, uint16_t serverPort, const char* ssid, const char* password):
         leds(leds),
         server(serverIP,serverPort),ssid(ssid),password(password),
         wireLed(leds,numLeds,firstPin),
