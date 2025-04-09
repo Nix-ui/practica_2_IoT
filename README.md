@@ -60,43 +60,71 @@
   - ESP30 Pins (Led Controller)
     - ```mermaid
          %%{init: {'theme':'neutral'}}%%
-          classDiagram
+            classDiagram
             direction RL
             class Led{
-              -ledPin : byte
-              -actualState : bool 
-              -finalState : byte
-              -previousMillis : unsigned long 
+              -m_pin : uint8_t$
+              -m_currentState : State
+              -m_isOn : bool 
+              -m_blinkInterval : uint32_t
+              -m_previousMillis : uint32_t
               -interval : unsigned long
-              +STATE_ON : byte$
-              +STATE_OFF : byte$
-              +STATE_BLINK : byte$
+              +ON : enum class State$
+              +OFF : enum class State$
+              +BLINK : enum class State$
               -turnOn() void
               -turnOff() void
               -blink() void
-              +setBlinksPerSecond(byte bps) void
+              -applyState() void
+              -toggle() void
+              -handleBlink() void
+              +getPin() uint8_t$
+              +update() void
+              +setBlinksPerSecond(uint16_t blinksPerSecond)
               +setState(byte state) void
               }
-            Controller <-- LedController
+            
+            class Controller~typename T, typename U~{
+                +setAllStates(T state) virtual void
+                +setState(T state,U id) virtual void
+            }
+
+            Controller --> LedController
+
             LedController --> Led
-            Controller : +setState() virtual void
-            Controller: + setAllStates() virtual void
             class LedController{
-              -leds : Led[]
+              -m_leds : Led[]
+              -m_numLeds : uint8_t$
+              -m_firstPin : uint8_t$
               +setAllStates(byte state) void
               +setState(byte ledIndex, byte state) void
-            }      
+              +getLedPin(uint8_t index) uint8_t$
+              +updateAll() void
+              +getLedCount() uint8_t$
+              +getFirstPin() uint8_t$ 
+            } 
       ``` 
     - ```mermaid
          %%{init: {'theme':'neutral'}}%%
                 classDiagram
                     direction RL
-                    class UltraSonicSensor{
-                      -trigerPin : byte
-                      -echoPin : byte
-                      -getDistance() long
-                      +getDistanceCm() int
+                    class LedExecute{
+                        -client : ServerClient
+                        -leds : Led[]
+                        -actualInterval : byte
+                        -wireLed : LedController
+                        -ssid : char*$
+                        -password : char*$
+                        -lastUpdate: unsigned long
+                        -SENSOR_ID_TO_GET : uint16_t$
+                        -updateLedState(byte newInterval) void
+                        -checkSensorInterval() void
+                        +setup() void
+                        +loop() void
                     }
+                    LedExecute <-- ServerClient
+                    LedExecute <-- LedController
+                    LedExecute <-- Led
         ```
   - ESP38 Pins (UltraSonicSensor)
     - ```mermaid
@@ -106,8 +134,12 @@
                     class UltraSonicSensor{
                       -trigerPin : byte
                       -echoPin : byte
-                      -getDistance() long
+                      -SENSOR_ID : uint16_t
+                      -measureEchoTime() int
+                      +getDistanceUs() int
+                      +setSensorId() void
                       +getDistanceCm() int
+                      +getSensorId() uint16_t
                     }
       ```
     - ```mermaid
@@ -146,7 +178,39 @@
                       +reciveData(Resource, uint16_t, char*, size_t) bool
                       -sendPacket(byte,byte,uint16_t,uint8_t,uint32_t) bool
                     }
-
+      ```
+  - Server
+    - ```mermaid
+            classDiagram
+            %%{init: {'theme':'neutral'}}%%
+                    direction RL
+                    class ESPCRUDProtocol{
+                        -host : string
+                        -port : string
+                        -data_store : json
+                        -lock : threading.Lock
+                        -running : bool
+                        -server_socket : socket
+                        -POST : Command$
+                        -GET : Command$
+                        -UPDATE : Command$
+                        -DELETE : Command$
+                        -SENSOR : Resource$
+                        -LED : Resource$
+                        -OK : Status$
+                        -ERROR : Status$
+                        -NOT_FOUND : Status$
+                        +_handlePacket(self,conn)
+                        +_process_command(self, cmd, res, dev_id, data)
+                        +_client_handler(self, conn, addr)
+                        +start(self)
+                    }
+                    class Command
+                    class Resource
+                    class Status
+                    Command --> ESPCRUDProtocol
+                    Resource --> ESPCRUDProtocol
+                    Status --> ESPCRUDProtocol
       ```
 - Diagrama de comportamiento
   - ```mermaid
