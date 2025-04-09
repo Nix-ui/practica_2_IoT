@@ -35,16 +35,11 @@ class SensorExecute{
         Serial.println(cm);
         Serial.println(interval);
         if(cm !=0 ){
-            if(actualInterval != interval){
+            byte newInterval =  interval >= 3 ? 3 : interval; 
+            if(actualInterval != newInterval){
                 uint8_t intervalToSend[2]; 
-                intervalToSend[0] = interval;
+                intervalToSend[0] = newInterval;
                 intervalToSend[1] = 0;
-                if(interval > 3 && actualInterval!=3){
-                    intervalToSend[0] = 3;
-                    actualInterval =3;
-                }else{
-                    actualInterval = interval;
-                }
                 if(server.connectToServer()){
                     if (server.update(ServerClient::Resource::RES_SENSOR, mySensor.getSensorId(), intervalToSend, 1)) {
                         int status = server.receiveStatus();
